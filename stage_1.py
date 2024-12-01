@@ -62,6 +62,19 @@ def merge_ids(parties_df, ids_to_merge, col_name="assigned_id"):
     return parties_df
 
 
+def execute_merging_plan(df, merging_plan):
+    df.sort_values("assigned_id", inplace=True)
+    new_ids = np.zeros(len(df), dtype=int) - 1
+    for plan in tqdm(merging_plan, desc="executing merging plan"):
+        new_id = min(plan)
+        for old_id in plan:
+            start_index, end_index = indices_of_value(df["assigned_id"], old_id)
+            new_ids[start_index:end_index] = new_id
+    new_ids = np.where(new_ids == -1, df["assigned_id"], new_ids)
+    df["assigned_id"] = new_ids
+    return df
+
+
 def merge_two_plans(assigned_id_to_plan_id_map, plan_id_to_assigned_id_map, plan_ids):
     merged_plan_id = min(plan_ids)
     plan_assigned_ids = set()
@@ -195,7 +208,7 @@ def main():
             df = df.dropna(subset=["external_id"])
             df["external_id"] = df["external_id"].astype(int)
         df = init_df(df)
-        df.to_csv(output_path)
+        df.to_csv(output_path, index=False)
     elif stage == "eval":
         df = pd.read_csv(input_path, low_memory=False)
         print(f1_score(df["external_id"], df["assigned_id"]))
@@ -214,7 +227,9 @@ def main():
             df = df.sort_values(col_name, inplace=False)
             batches = create_batches(df, col_name, n)
             for i, (start_i, end_i) in enumerate(batches):
-                df.iloc[start_i:end_i].to_csv(output_path / f"batch_in_{i}.csv")
+                df.iloc[start_i:end_i].to_csv(
+                    output_path / f"batch_in_{i}.csv", index=False
+                )
         elif action == "execute":
             df = pd.read_csv(input_path / f"batch_in_{n}.csv", low_memory=False)
             merging_plans = get_merging_plans_on_batches(df, col_name, 0, len(df))
@@ -227,9 +242,10 @@ def main():
                     merging_plans.extend(pickle.load(f))
             merging_plans = create_super_merging_plan(merging_plans)
             df = pd.read_csv(input_path, low_memory=False)
-            for plan in tqdm(merging_plans, desc="executing merging plans"):
-                df = merge_ids(df, plan)
-            df.to_csv(output_path / "merged.csv")
+            df = execute_merging_plan(df, merging_plans)
+            # for plan in tqdm(merging_plans, desc="executing merging plans"):
+            #     df = merge_ids(df, plan)
+            df.to_csv(output_path / "merged.csv", index=False)
         else:
             raise KeyError(f"Unknown action: {action}")
     elif stage == "make_submission":

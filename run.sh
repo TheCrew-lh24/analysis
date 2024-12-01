@@ -16,7 +16,7 @@ if [ $mode == "train" ]; then
     python stage_1.py -i $root/1_merge_iban/merged.csv -s eval
 fi
 if [ $mode == "test" ]; then
-    python stage_1.py -i ../artifact2/1_merge_iban/merged.csv -s make_submission -o ../artifact2/1_merge_iban/submission.csv
+    python stage_1.py -i $root/1_merge_iban/merged.csv -s make_submission -o $root/1_merge_iban/submission.csv
 fi
 
 mkdir $root/2_merge_phone
@@ -28,7 +28,7 @@ if [ $mode == "train" ]; then
     python stage_1.py -i $root/2_merge_phone/merged.csv -s eval
 fi
 if [ $mode == "test" ]; then
-    python stage_1.py -i ../artifact2/2_merge_phone/merged.csv -s make_submission -o ../artifact2/2_merge_phone/submission.csv
+    python stage_1.py -i $root/2_merge_phone/merged.csv -s make_submission -o $root/2_merge_phone/submission.csv
 fi
 
 mkdir $root/3_merge_name
@@ -40,5 +40,5 @@ if [ $mode == "train" ]; then
     python stage_1.py -i $root/3_merge_name/merged.csv -s eval
 fi
 if [ $mode == "test" ]; then
-    python stage_1.py -i ../artifact2/3_merge_name/merged.csv -s make_submission -o ../artifact2/3_merge_name/submission.csv
+    python stage_1.py -i $root/3_merge_name/merged.csv -s make_submission -o $root/3_merge_name/submission.csv
 fi
